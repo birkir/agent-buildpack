@@ -3,6 +3,8 @@
 BUILD_DIR=$1
 CACHE_DIR=$2
 
+GRAFANA_AGENT_CONFIG="grafana-agent.config.yml"
+
 mkdir -p $BUILD_DIR/bin
 
 if [[ -f $CACHE_DIR/agent-linux-amd64 && cmp -s $BUILD_DIR/bin/agent $CACHE_DIR/agent-linux-amd64 ]]; then
@@ -10,13 +12,13 @@ if [[ -f $CACHE_DIR/agent-linux-amd64 && cmp -s $BUILD_DIR/bin/agent $CACHE_DIR/
   cp -f "$CACHE_DIR/agent" "$BUILD_DIR/bin/agent"
 else
   echo "Downloading agent binary."
-  curl -o "$CACHE_DIR/agent-linux-amd64.zip" -L "https://github.com/grafana/agent/releases/download/v0.15.0/agent-linux-amd64.zip"
+  curl -o "$CACHE_DIR/agent-linux-amd64.zip" -L "https://github.com/grafana/agent/releases/download/v0.39.2/grafana-agent-darwin-amd64.zip"
   unzip agent-linux-amd64.zip -d $CACHE_DIR
   cp -f "$CACHE_DIR/agent-linux-amd64" "$BUILD_DIR/bin/agent"
 fi
 
-if [[ -f $CACHE_DIR/agent.yml && cmp -s $BUILD_DIR/config.yml $CACHE_DIR/agent.yml ]]; then
-  echo "Reusing cached config.yml."
+if [[ -f $CACHE_DIR/agent.yml && cmp -s $BUILD_DIR/$GRAFANA_AGENT_CONFIG $CACHE_DIR/agent.yml ]]; then
+  echo "Reusing cached $GRAFANA_AGENT_CONFIG."
   cp -f "$CACHE_DIR/agent.yml" "$BUILD_DIR/agent.yml"
 else
   if ! [ -x "$(command -v envsubst)" ]; then
@@ -25,6 +27,6 @@ else
   fi
 
   echo "Substituting envrionment variables."
-  envsubst < $BUILD_DIR/config.yml > $BUILD_DIR/agent.yml
+  envsubst < $BUILD_DIR/$GRAFANA_AGENT_CONFIG > $BUILD_DIR/agent.yml
   cp -f "$BUILD_DIR/agent.yml" "$CACHE_DIR/agent.yml"
 fi
